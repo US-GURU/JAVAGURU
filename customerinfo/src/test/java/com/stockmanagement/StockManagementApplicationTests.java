@@ -3,7 +3,7 @@ package com.stockmanagement;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import org.junit.Before;
-import org.junit.jupiter.api.Test;
+import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -31,6 +31,7 @@ public class ApplicationTest
     }
 
 
+	@Test
 	public void testFindTheCustomerData() {
 		CustomerDetails po = new CustomerDetails();
 		po.setName("cust122");
@@ -39,20 +40,8 @@ public class ApplicationTest
 		CustomerDetails details = customerRepository.save(po);
 		assertEquals("cust122", details.getName());
 	}
-	@Test
-    public void testAddCustomer_returnsNewCustomer() {
-        when(customerRepository.save(any(CustomerDetails.class))).thenReturn(new CustomerDetails());
-        CustomerDetails customer = new CustomerDetails();
-        assertThat(customerRepository.save(customer), is(notNullValue()));
-    }
-    //Throwing an exception from the mocked method
-    @Test(expected = RuntimeException.class)
-       public void testAddCustomer_throwsException() {
-    	 when(customerRepository.save(any(CustomerDetails.class))).
-    	 CustomerDetails customer = new CustomerDetails();
-    	 customerRepository.save(customer);//
-    	 
-       }
+	
+  
 
 }
 }

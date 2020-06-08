@@ -5,9 +5,9 @@ import java.util.Date;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
-import java.util.function.Consumer;
 
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -25,8 +25,11 @@ import com.stockmanagement.json.CustomerInfoResponse;
 import com.stockmanagement.json.Message;
 import com.stockmanagement.po.CustomerDetails;
 
+
 @RestController
-public class CustomerHandler {//TO DO: GURU rename class to CustomerController
+public class CustomerHandler {
+	
+	private static final Logger log = LoggerFactory.getLogger(CustomerHandler.class);
 
 	@Autowired
 	private CustomerRepository customerRepository;
@@ -46,24 +49,18 @@ public class CustomerHandler {//TO DO: GURU rename class to CustomerController
 			CustomerDetails details = customerRepository.save(po);
 
 			CustomerInfoResponse custResponse = new CustomerInfoResponse();
-
-			ResponseEntity<CustomerInfoResponse> response = null;
-
+			
 			if (po.equals(details)) {
 
 				custResponse.setDirtyStatus("saved successfully! "+new Date());
-				response = new ResponseEntity<CustomerInfoResponse>(custResponse, HttpStatus.OK);
-
-				return response;
+				return new ResponseEntity<CustomerInfoResponse>(custResponse, HttpStatus.OK);
 			}
 
 			custResponse.setDirtyStatus("not saved. check log for details");
-			response = new ResponseEntity<CustomerInfoResponse>(custResponse, HttpStatus.OK);
-			return response;
-
+			return new ResponseEntity<CustomerInfoResponse>(custResponse, HttpStatus.OK);
 		} catch (Exception e) {
 
-			e.printStackTrace();
+			log.info("Customer details not saved");
 			message.setMessage(e.getCause().getCause().getMessage());
 		}
 		
@@ -84,7 +81,7 @@ public class CustomerHandler {//TO DO: GURU rename class to CustomerController
 			customerRepository.save(details);
 			response.setDirtyStatus("updated successfully");
 		} catch (Exception e) {
-			e.printStackTrace();
+			log.info("Customer details not updated");
 			response.setDirtyStatus("not updated. check log for details");
 		}
 
@@ -100,81 +97,46 @@ public class CustomerHandler {//TO DO: GURU rename class to CustomerController
 			customerRepository.deleteById(id.getId());
 			response.setDirtyStatus("deleted successfully");
 		} catch (Exception e) {
-			e.printStackTrace();
+			log.info("Customer details not deleted");
 			response.setDirtyStatus("unable to delete. check log for details");
 		}
 		return response;
 	}
 
 	@GetMapping("/find")
-	public ResponseEntity<?> getCustomerDetails(@RequestBody BusinessIdentity identity) {
+	public ResponseEntity<?> findCustomerDetails(@RequestBody BusinessIdentity identity) {
 
-		Optional<CustomerDetails> detailsOpt = null;
-		ResponseEntity<?> response = null;
+		Optional<CustomerDetails> detailsOpt = null;	
+		CustomerInfo customerInfo = null;
+		Message msgInfo = new Message();
 		try {
 			detailsOpt = customerRepository.findById(identity.getId());
 			if (detailsOpt != null && detailsOpt.get() != null) {
 				CustomerDetails details = detailsOpt.get();
-				CustomerInfo info = new CustomerInfo();
-				info.setName(details.getName());
-				info.setPhone(details.getPhone());
-				response = new ResponseEntity<CustomerInfo>(info, HttpStatus.OK);
-				return response;
+				customerInfo = new CustomerInfo();
+				customerInfo.setName(details.getName());
+				customerInfo.setPhone(details.getPhone());					
 			}
-			return response;
+			return new ResponseEntity<CustomerInfo>(customerInfo, HttpStatus.OK);	
 		} catch (NoSuchElementException e) {
-			Message info = new Message();
-			info.setMessage(e.getMessage());
-			response = new ResponseEntity<Message>(info, HttpStatus.OK);
-			return response;
+			
+			msgInfo.setMessage(e.getMessage());
+			return new ResponseEntity<Message>(msgInfo, HttpStatus.OK);	
 		} catch (Exception e) {
-			e.printStackTrace();
+			log.info("Customer details not find");
 			Message info = new Message();
-			info.setMessage("customer details not read. check log for details");
-			response = new ResponseEntity<Message>(info, HttpStatus.OK);
-			return response;
+			info.setMessage("customer details not find. check log for details");
+			return new ResponseEntity<Message>(info, HttpStatus.OK);			
 		}
 	}
 
 	@GetMapping("/findAll")
 	public List<CustomerInfo> findAll() {
-		return findAllTraditional();
+		return findAllIfPresent();
 	}
 	
-	public List<CustomerInfo> findAllTraditional() {// for each - tranditional
-
-		Iterable<CustomerDetails> customersDetails = customerRepository.findAll();
-		List<CustomerInfo> customerInfos = new ArrayList<>();
-
-		for (CustomerDetails details : customersDetails) {
-			CustomerInfo info = new CustomerInfo();
-			info.setId(details.getId());
-			info.setName(details.getName());
-			info.setPhone(details.getPhone());
-			customerInfos.add(info);
-		}
 		
-		return customerInfos;
-	}
-	
-	public List<CustomerInfo>  findAllJava8forEach() {//for Each- java8
-		
-		Iterable<CustomerDetails> customersDetails = customerRepository.findAll();
-		List<CustomerInfo> customerInfos = new ArrayList<>();
-
-		customersDetails.forEach(details -> {
-			CustomerInfo info = new CustomerInfo();
-			info.setId(details.getId());
-			info.setAge(details.getAge());
-			info.setName(details.getName());
-			info.setPhone(details.getPhone());
-			customerInfos.add(info);
-		});
-
-		return customerInfos;
-	}
-	
-	public List<CustomerInfo> findAllIfPresent() {// using lambda
+	private List<CustomerInfo> findAllIfPresent() {// using lambda
 		
 		Iterable<CustomerDetails> customersDetails = customerRepository.findAll();
 		List<CustomerInfo> customerInfos = new ArrayList<>();
@@ -189,48 +151,8 @@ public class CustomerHandler {//TO DO: GURU rename class to CustomerController
 				info.setName(customer.getName());
 				info.setPhone(customer.getPhone());
 				customerInfos.add(info);
-			});
-			
-		});
-		
-		return customerInfos;
-	}
-	
-	public List<CustomerInfo> getCustomerDetailsWithActualAPIs() {
-		
-		Iterable<CustomerDetails> customersDetails = customerRepository.findAll();
-		List<CustomerInfo> customerInfos = new ArrayList<>();
-		
-		Optional<Iterable<CustomerDetails>> custDetailsOpt = Optional.ofNullable(customersDetails);
-		
-		custDetailsOpt.ifPresent(new Consumer<Iterable<CustomerDetails>>() {
-			
-			@Override
-			public void accept(Iterable<CustomerDetails> details) {
-				
-				details.forEach(
-						
-						new Consumer<CustomerDetails>() {
-
-							@Override
-							public void accept(CustomerDetails customer) {
-								
-								CustomerInfo info = new CustomerInfo();
-								info.setId(customer.getId());
-								info.setAge(customer.getAge());
-								info.setName(customer.getName());
-								info.setPhone(customer.getPhone());
-								customerInfos.add(info);
-							}
-							
-						}
-					);
-				
-			}
-		});
-		
-		return customerInfos;
-	}
-
+			});			
+		});		
+	return customerInfos;
+	}	
 }
-
