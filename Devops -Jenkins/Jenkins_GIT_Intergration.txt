@@ -1,0 +1,57 @@
+
+
+Step1: Create a Java Program & run it thru CLI.
+
+--> Use Hello.java
+--> Place it under /opt/Java
+--> Compile it
+
+root@ip-172-31-31-153:/opt/Java# javac Hello.java
+root@ip-172-31-31-153:/opt/Java# ls -lrt
+total 8
+-rwxr-xr-x 1 root root 153 Apr 26 15:14 Hello.java
+-rw-r--r-- 1 root root 675 Apr 26 15:14 Hello.class
+
+--> Now Run it like below, java <Name_Of_The_ClassFile>
+
+root@ip-172-31-31-153:/opt/Java# java Hello
+Hello World... 1
+Hello World... 2
+Hello World... 3
+Hello World... 4
+Hello World... 5
+Hello World... 6
+Hello World... 7
+Hello World... 8
+Hello World... 9
+Hello World... 10
+root@ip-172-31-31-153:/opt/Java#
+
+
+Step2: Create a Jenkins Job to run the Java prgm.
+
+--> Create a new job "HelloWorldProject"
+--> Write a shell script for compiling & running the Hello JAVA file.
+--> Save & Build the Project.
+--> Verify the Console Output.
+Note: Give appropirate permissions before building the project.
+
+
+Step3: Add this program/project to GIT.
+
+--> Install Git, git init, git add, git commit, git push it to GITHUB.
+--> Verify the HelloWorld files under your target Repository.
+
+
+Step4: Jenkins - add GIT plugin.
+
+--> Goto Jenkins, Manage Jenkins, search for "GIT Plugin" under Available tab.
+--> Once its confirmed, then goto your JOB.
+
+
+Step5 Configure Jenkins job to trigger the execution when a change is pushed to GITHUB.
+
+--> Goto Project, Configure.
+--> Under SCM, choose GIT, add GITHUB repos URL & Credentials of the GITHUB.
+--> Goto Build Trigger, Choose POLL SCM & Schedule as your wish [Eg: * * * * * --> For every minute, the GIT Repository will be checked for the new code]
+
